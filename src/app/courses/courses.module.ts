@@ -25,19 +25,41 @@ import { EntityDataService, EntityDefinitionService, EntityMetadataMap} from '@n
 import {compareCourses, Course} from './model/course';
 
 import {compareLessons, Lesson} from './model/lesson';
+import { CourseEntityService } from './services/courses-entity.service';
+import { CourseResolver } from './services/courses.resolver';
+import { CourseDataService } from './services/courses-data.service';
+import { LessonEntityService } from './services/lessson-entity.service';
 
 
 export const coursesRoutes: Routes = [
   {
     path: '',
-    component: HomeComponent
-
+    component: HomeComponent,
+    resolve: {
+      courses: CourseResolver
+    }
   },
   {
     path: ':courseUrl',
-    component: CourseComponent
+    component: CourseComponent,
+    resolve: {
+      courses: CourseResolver
+    }
   }
 ];
+
+const entityMetaData: EntityMetadataMap = {
+  Course: {
+    sortComparer: compareCourses,
+    entityDispatcherOptions: {
+      optimisticUpdate: true
+    }
+  },
+  Lesson: {
+    sortComparer: compareLessons,
+
+  }
+}
 
 @NgModule({
   imports: [
@@ -71,14 +93,23 @@ export const coursesRoutes: Routes = [
     EditCourseDialogComponent,
     CourseComponent
   ],
-  entryComponents: [EditCourseDialogComponent],
   providers: [
-    CoursesHttpService
+    CoursesHttpService,
+    CourseEntityService,
+    CourseResolver,
+    CourseDataService,
+    LessonEntityService
   ]
 })
 export class CoursesModule {
 
-  constructor() {
+  constructor(
+    private eds: EntityDefinitionService,
+    private entityDataService: EntityDataService,
+    private coursesDataService: CourseDataService
+  ) {
+    eds.registerMetadataMap(entityMetaData);
+    entityDataService.registerService('Course', coursesDataService);
 
   }
 
